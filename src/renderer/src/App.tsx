@@ -52,14 +52,14 @@ function App(): JSX.Element {
   }
 
   if (isLoading) {
-    return <div className="loading">Loading ScholarTrack...</div>
+    return <div className="loading">Initializing Tempo...</div>
   }
 
   return (
     <div className="app-container">
       <nav className="sidebar">
         <div className="logo">
-          ScholarTrack
+          Tempo
         </div>
         <div className="nav-items">
           <button 

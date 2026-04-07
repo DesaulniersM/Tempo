@@ -1,9 +1,9 @@
 {
-  "name": "scholar-track",
+  "name": "tempo",
   "version": "1.0.0",
-  "description": "A time tracker for PhD students",
+  "description": "A high-performance time tracker for deep work",
   "main": "./out/main/index.js",
-  "author": "ScholarTrack",
+  "author": "Tempo",
   "license": "MIT",
   "scripts": {
     "format": "prettier --write .",
@@ -19,8 +19,8 @@
     "build:linux": "npm run build && electron-builder --linux"
   },
   "build": {
-    "appId": "com.scholartrack.app",
-    "productName": "ScholarTrack",
+    "appId": "io.tempo.app",
+    "productName": "Tempo",
     "directories": {
       "output": "dist"
     },

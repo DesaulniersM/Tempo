@@ -1,18 +1,18 @@
-# 🎓 ScholarTrack
+# ⏱️ Tempo
 
-**ScholarTrack** is a high-performance, focused time tracker designed specifically for the unique workflows of PhD students and researchers. Move beyond messy spreadsheets and into a "Flow-first" environment.
+**Tempo** is a high-performance, focused time tracker designed for deep work, research, and technical mastery. Move beyond messy spreadsheets and into a "Flow-first" environment.
 
-![ScholarTrack Icon](resources/icon.png)
+![Tempo Icon](resources/icon.png)
 
 ## 🚀 Key Features
 
 -   **Deep Work Flow Timer:** A prominent, distraction-free timer to help you enter and maintain flow states.
--   **PhD Dashboard:** A bird's-eye view of your research week, including daily intensity heatmaps (GitHub-style).
+-   **Mastery Dashboard:** A bird's-eye view of your focus week, including daily intensity heatmaps.
 -   **Intelligent Insights:** Visualize your time allocation across projects with interactive charts and peak productivity analysis.
--   **Weekly Targets:** Set specific hour goals for your Research, TA duties, or Writing and track your progress in real-time.
--   **Google Sheets Sync:** Seamlessly migrate your entire research history from existing spreadsheets via CSV import.
+-   **Weekly Targets:** Set specific hour goals for your most important work and track your progress in real-time.
+-   **Universal Data Sync:** Seamlessly migrate your entire history from existing spreadsheets via CSV import.
 -   **Native & Portable:** Built for Linux (Ubuntu) with a native launcher and portable `.AppImage` support.
--   **Dark Mode:** A refined, research-friendly dark theme for late-night writing sessions.
+-   **Dark Mode:** A refined, distraction-free dark theme.
 
 ## 🛠️ Getting Started
 
@@ -23,8 +23,8 @@
 ### Installation
 1. Clone this repository:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/scholar-track.git
-   cd scholar-track
+   git clone https://github.com/YOUR_USERNAME/tempo.git
+   cd tempo
    ```
 2. Install dependencies:
    ```bash
@@ -38,7 +38,7 @@
 ## 📊 Migrating your History
 If you have an existing spreadsheet (like a Google Sheet), follow these steps:
 1. Open your sheet and go to **File > Download > Comma Separated Values (.csv)**.
-2. In ScholarTrack, go to the **Settings** tab.
+2. In Tempo, go to the **Settings** tab.
 3. Click **Select CSV File to Import**.
 4. The app will automatically create your projects and migrate all historical hours.
 
@@ -53,4 +53,4 @@ Your portable app will be generated in the `dist/` folder.
 Detailed development progress can be found in [ROADMAP.md](ROADMAP.md).
 
 ---
-*Created with ❤️ for the research community.*
+*Built for the creators, researchers, and deep-thinkers.*

@@ -1,4 +1,4 @@
-# ScholarTrack: Development Roadmap
+# Tempo: Development Roadmap
 
 ## Phase 1: Data Integrity & History (The "Foundations")
 - [x] **Entry Management:** UI to Delete existing entries.
