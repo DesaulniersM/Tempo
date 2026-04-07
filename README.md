@@ -1,6 +1,6 @@
 # ⏱️ Tempo
 
-**Tempo** is a high-performance, focused time tracker.
+**Tempo** is a focused time tracker.
 
 ![Tempo Icon](resources/icon.png)
 
