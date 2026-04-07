@@ -1,6 +1,6 @@
 # ⏱️ Tempo
 
-**Tempo** is a high-performance, focused time tracker designed for deep work, research, and technical mastery. Move beyond messy spreadsheets and into a "Flow-first" environment.
+**Tempo** is a high-performance, focused time tracker.
 
 ![Tempo Icon](resources/icon.png)
 
@@ -43,14 +43,14 @@ If you have an existing spreadsheet (like a Google Sheet), follow these steps:
 4. The app will automatically create your projects and migrate all historical hours.
 
 ## 📦 Building for Production
-To create a standalone, portable Linux application (.AppImage):
+To create a standalone, portable Linux application (.AppImage) go into the tempo directory and run:
 ```bash
 npm run build:linux
 ```
 Your portable app will be generated in the `dist/` folder.
 
 ## 📝 Roadmap
-Detailed development progress can be found in [ROADMAP.md](ROADMAP.md).
+Development progress can be found in [ROADMAP.md](ROADMAP.md).
 
 ---
-*Built for the creators, researchers, and deep-thinkers.*
+this is clearly a work in progress and i'm open to suggestions and improvements
