@@ -23,7 +23,7 @@
 ### Installation
 1. Clone this repository:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/tempo.git
+   git clone https://github.com/DesaulniersM/Tempo.git
    cd tempo
    ```
 2. Install dependencies:
@@ -43,14 +43,24 @@ If you have an existing spreadsheet (like a Google Sheet), follow these steps:
 4. The app will automatically create your projects and migrate all historical hours.
 
 ## 📦 Building for Production
-To create a standalone, portable Linux application (.AppImage) go into the tempo directory and run:
+To create a standalone, portable Linux application (.AppImage), navigate to the project directory and run:
+
+### For Standard PCs (x64)
 ```bash
 npm run build:linux
 ```
+
+### For ARM Devices (Raspberry Pi, PineBook, etc.)
+```bash
+npx electron-builder --linux AppImage --arm64
+```
 Your portable app will be generated in the `dist/` folder.
+
+## 💻 Multi-Architecture Support
+Tempo supports both **x64** and **ARM64** Linux environments. Because it utilizes a native SQLite engine for high performance, ensure you build the AppImage for your specific hardware target.
 
 ## 📝 Roadmap
 Development progress can be found in [ROADMAP.md](ROADMAP.md).
 
 ---
-this is clearly a work in progress and i'm open to suggestions and improvements
+*Tempo is a work in progress. I am open to suggestions, improvements, and research collaborations.*
