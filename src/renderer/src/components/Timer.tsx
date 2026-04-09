@@ -22,11 +22,28 @@ const Timer: React.FC<TimerProps> = ({
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const startTimeRef = useRef<number | null>(null)
 
+  const playSound = (freq: number, type: OscillatorType, dur: number) => {
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.type = type
+      osc.frequency.setValueAtTime(freq, ctx.currentTime)
+      gain.gain.setValueAtTime(0.1, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + dur)
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.start()
+      osc.stop(ctx.currentTime + dur)
+    } catch (e) {
+      console.error('Audio failed', e)
+    }
+  }
+
   // Handle Quick Start from Dashboard
   useEffect(() => {
     if (quickStartId && !isRunning) {
       setActiveCategoryId(quickStartId)
-      // Small delay to ensure state is set before starting
       setTimeout(() => {
         handleStart(quickStartId)
       }, 0)
@@ -85,6 +102,7 @@ const Timer: React.FC<TimerProps> = ({
       await window.api.saveActiveTimer(catId, startTime, notes)
       startTimeRef.current = new Date(startTime).getTime()
       setIsRunning(true)
+      playSound(880, 'sine', 0.5)
     }
   }
 
@@ -92,15 +110,17 @@ const Timer: React.FC<TimerProps> = ({
     if (!activeCategoryId) return
 
     const durationHours = seconds / 3600
-    const today = new Date().toISOString().split('T')[0]
+    const now = new Date()
+    const localDate = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`
 
-    await window.api.addEntry(activeCategoryId, durationHours, today, notes)
+    await window.api.addEntry(activeCategoryId, durationHours, localDate, notes)
     await window.api.clearActiveTimer()
     
     setIsRunning(false)
     setSeconds(0)
     setNotes('')
     startTimeRef.current = null
+    playSound(440, 'triangle', 0.8)
     onEntryAdded()
   }
 

@@ -81,7 +81,7 @@ async function createWindow(): Promise<void> {
   ipcMain.handle('db:getActiveTimer', () => getActiveTimer())
   ipcMain.handle('db:clearActiveTimer', () => clearActiveTimer())
   ipcMain.handle('db:addCategory', (_, name, color) => addCategory(name, color))
-  ipcMain.handle('db:updateCategory', (_, id, name, color, weeklyTarget) => updateCategory(id, name, color, weeklyTarget))
+  ipcMain.handle('db:updateCategory', (_, id, name, color, weeklyTarget, dailyTarget) => updateCategory(id, name, color, weeklyTarget, dailyTarget))
   ipcMain.handle('db:deleteCategory', (_, id) => deleteCategory(id))
 
   // Create the browser window.

@@ -33,7 +33,7 @@ declare global {
       getActiveTimer: () => Promise<ActiveTimer | null>
       clearActiveTimer: () => Promise<void>
       addCategory: (name: string, color: string) => Promise<void>
-      updateCategory: (id: number, name: string, color: string, weeklyTarget: number) => Promise<void>
+      updateCategory: (id: number, name: string, color: string, weeklyTarget: number, dailyTarget: number) => Promise<void>
       deleteCategory: (id: number) => Promise<void>
       importEntries: (entries: any[]) => Promise<void>
       importRawData: (rawData: string) => Promise<{ success: boolean, count?: number, message?: string }>

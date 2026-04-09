@@ -52,10 +52,20 @@ const Insights: React.FC = () => {
   [summary])
 
   const dailyAverage = useMemo(() => {
-    if (entries.length === 0) return 0
-    const uniqueDates = new Set(entries.map(e => e.date))
-    return totalHours / (uniqueDates.size || 1)
-  }, [entries, totalHours])
+    let days = 1
+    switch (range) {
+      case '1W': days = 7; break
+      case '1M': days = 30; break
+      case '3M': days = 90; break
+      case '6M': days = 180; break
+      case '1Y': days = 365; break
+      case 'All': 
+        const uniqueDates = new Set(entries.map(e => e.date))
+        days = uniqueDates.size || 1
+        break
+    }
+    return totalHours / days
+  }, [entries, totalHours, range])
 
   const hourlyData = useMemo(() => {
     const hours = Array.from({ length: 24 }, (_, i) => ({

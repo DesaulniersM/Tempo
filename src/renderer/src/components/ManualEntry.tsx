@@ -10,12 +10,19 @@ interface ManualEntryProps {
 const ManualEntry: React.FC<ManualEntryProps> = ({ categories, onEntryAdded }) => {
   const [categoryId, setCategoryId] = useState<number | null>(null)
   const [duration, setDuration] = useState('')
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const getLocalDate = () => {
+    const now = new Date()
+    return `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`
+  }
+  const [date, setDate] = useState(getLocalDate())
   const [notes, setNotes] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!categoryId || !duration || !date) return
+    if (!categoryId || !duration || !date) {
+      alert('Please fill in all required fields (Category, Hours, and Date).')
+      return
+    }
 
     await window.api.addEntry(categoryId, Number(duration), date, notes)
     
@@ -23,25 +30,26 @@ const ManualEntry: React.FC<ManualEntryProps> = ({ categories, onEntryAdded }) =
     setDuration('')
     setNotes('')
     onEntryAdded()
+    alert('Entry added successfully!')
   }
 
   return (
     <div className="card manual-entry-card">
-      <div className="card-header">
-        <PlusCircle size={24} />
-        <h2>Add Manual Entry</h2>
+      <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
+        <PlusCircle size={24} color="var(--primary)" />
+        <h2 style={{ margin: 0 }}>Add Manual Entry</h2>
       </div>
 
       <form onSubmit={handleSubmit} className="manual-entry-form">
         <div className="form-row">
           <div className="form-group">
-            <label>Category</label>
+            <label>Project</label>
             <select 
               value={categoryId || ''} 
               onChange={(e) => setCategoryId(Number(e.target.value))}
               required
             >
-              <option value="" disabled>Select</option>
+              <option value="" disabled>Select a project</option>
               {categories.map(cat => (
                 <option key={cat.id} value={cat.id}>{cat.name}</option>
               ))}
@@ -51,8 +59,7 @@ const ManualEntry: React.FC<ManualEntryProps> = ({ categories, onEntryAdded }) =
           <div className="form-group">
             <label>Hours</label>
             <input 
-              type="number" 
-              step="0.01" 
+              type="text" 
               placeholder="e.g. 1.5"
               value={duration}
               onChange={(e) => setDuration(e.target.value)}
@@ -73,15 +80,17 @@ const ManualEntry: React.FC<ManualEntryProps> = ({ categories, onEntryAdded }) =
 
         <div className="form-group">
           <label>Notes</label>
-          <input 
-            type="text" 
-            placeholder="What did you do?"
+          <textarea 
+            placeholder="What did you work on?"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
+            style={{ minHeight: '80px' }}
           />
         </div>
 
-        <button type="submit" className="btn btn-primary">Add Entry</button>
+        <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '1rem', fontSize: '1rem' }}>
+          Add Time Entry
+        </button>
       </form>
     </div>
   )

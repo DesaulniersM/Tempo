@@ -26,3 +26,13 @@
 - [x] **Quick Start Flow:** Start timers directly from the Dashboard with one click. (Implemented)
 - [x] **Animated Transitions:** Smooth transitions between tabs and hover states. (Implemented)
 - [x] **Dashboard Command Center:** Re-designed layout with high-level stats (This Week, Total Logs, Main Project). (Implemented)
+
+## Phase 6: The Dopamine Engine (Gamification)
+- [ ] **XP & Leveling System:** Convert hours into "Focus XP" with unlockable rank titles.
+- [x] **Flow Streaks:** Visual fire icon and counter for consecutive days meeting goals. (Implemented)
+- [x] **The "Zen" Sound Library:** High-quality audio feedback for Start/Stop/Goal-reached events. (Implemented)
+- [ ] **Focus Soundscapes:** Integrated white/pink/brown noise generator active only during timers.
+- [ ] **Milestone Celebrations:** 
+    - [ ] **Golden State:** Progress bars glow/breathe when weekly target is 100% met.
+    - [ ] **Achievement Badges:** (Optional) Unlockable trophies for hours/time-of-day milestones.
+    - [ ] **Monday Victory Lap:** (Optional) A "Week in Review" summary screen.

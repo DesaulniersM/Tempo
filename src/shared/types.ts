@@ -3,6 +3,7 @@ export interface Category {
   name: string
   color: string
   weekly_target: number
+  daily_target: number
 }
 
 export interface Entry {
@@ -20,5 +21,6 @@ export interface Summary {
   name: string
   color: string
   weekly_target: number
+  daily_target: number
   total_duration: number
 }

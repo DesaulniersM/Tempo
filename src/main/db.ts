@@ -13,7 +13,6 @@ export function initDb() {
     }
     
     const dbPath = join(userDataPath, 'scholar-track.sqlite')
-    console.log('Database path:', dbPath)
     
     try {
       db = new Database(dbPath)
@@ -23,15 +22,18 @@ export function initDb() {
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           name TEXT UNIQUE NOT NULL,
           color TEXT NOT NULL,
-          weekly_target REAL DEFAULT 0
+          weekly_target REAL DEFAULT 0,
+          daily_target REAL DEFAULT 0
         )
       `)
 
-      // Migrating existing table if column is missing
+      // Migration check
       const tableInfo = db.prepare("PRAGMA table_info(categories)").all()
-      const hasWeeklyTarget = tableInfo.some((col: any) => col.name === 'weekly_target')
-      if (!hasWeeklyTarget) {
+      if (!tableInfo.some((col: any) => col.name === 'weekly_target')) {
         db.exec("ALTER TABLE categories ADD COLUMN weekly_target REAL DEFAULT 0")
+      }
+      if (!tableInfo.some((col: any) => col.name === 'daily_target')) {
+        db.exec("ALTER TABLE categories ADD COLUMN daily_target REAL DEFAULT 0")
       }
 
       db.exec(`
@@ -100,46 +102,36 @@ export function importEntries(entries: { category_id: number, duration: number, 
 export function importRawData(rawData: string) {
   const rows = rawData.trim().split('\n')
   if (rows.length < 2) return { success: false, message: 'No data found' }
-
   const firstRow = rows[0]
   const delimiter = firstRow.includes('\t') ? '\t' : ','
   const headers = firstRow.split(delimiter).map(h => h.trim().replace(/^"|"$/g, ''))
   const ignoredColumns = ['date', 'total', 'weekly total', 'average per day', 'notes', 'cumulative total', 'total days off']
-
   const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#ec4899', '#06b6d4']
   
   const transaction = db.transaction(() => {
-    // 1. Ensure categories exist and map them
-    const categoryMap: Record<number, number> = {} // headerIndex -> categoryId
-    
+    const categoryMap: Record<number, number> = {}
     for (let j = 1; j < headers.length; j++) {
       const header = headers[j]
       if (!header || ignoredColumns.includes(header.toLowerCase())) continue
-      
       db.prepare('INSERT OR IGNORE INTO categories (name, color) VALUES (?, ?)').run(header, colors[j % colors.length])
       const cat = db.prepare('SELECT id FROM categories WHERE name = ?').get(header) as { id: number }
       categoryMap[j] = cat.id
     }
-
-    // 2. Import entries
     let count = 0
     for (let i = 1; i < rows.length; i++) {
       const cols = rows[i].split(delimiter).map(c => c.trim().replace(/^"|"$/g, ''))
       const dateStr = cols[0]
       if (!dateStr) continue
-
       let formattedDate = ''
       const parts = dateStr.split(/[-/]/)
       if (parts.length === 3) {
-        const month = parts[0].padStart(2, '0')
-        const day = parts[1].padStart(2, '0')
-        let year = parts[2]
-        if (year.length === 2) year = `20${year}`
-        formattedDate = `${year}-${month}-${day}`
+        const m = parts[0].padStart(2, '0')
+        const d = parts[1].padStart(2, '0')
+        let y = parts[2]
+        if (y.length === 2) y = `20${y}`
+        if (parseInt(m) <= 12) formattedDate = `${y}-${m}-${d}`
       }
-
       if (!formattedDate) continue
-
       for (const [headerIndex, catId] of Object.entries(categoryMap)) {
         const duration = parseFloat(cols[parseInt(headerIndex)])
         if (!isNaN(duration) && duration > 0) {
@@ -152,46 +144,36 @@ export function importRawData(rawData: string) {
     }
     return count
   })
-
   const importedCount = transaction()
   return { success: true, count: importedCount }
 }
 
-export function updateCategory(id: number, name: string, color: string, weeklyTarget: number) {
-  return db.prepare('UPDATE categories SET name = ?, color = ?, weekly_target = ? WHERE id = ?').run(
-    name,
-    color,
-    weeklyTarget,
-    id
+export function updateCategory(id: number, name: string, color: string, weeklyTarget: number, dailyTarget: number) {
+  return db.prepare('UPDATE categories SET name = ?, color = ?, weekly_target = ?, daily_target = ? WHERE id = ?').run(
+    name, color, weeklyTarget, dailyTarget, id
   )
 }
 
 export function deleteCategory(id: number) {
-  const entriesCount = db.prepare('SELECT COUNT(*) as count FROM entries WHERE category_id = ?').get() as { count: number }
-  if (entriesCount.count > 0) {
-    throw new Error('Cannot delete category with existing time entries')
-  }
+  // Check if there are entries using this category
+  const entriesCount = db.prepare('SELECT COUNT(*) as count FROM entries WHERE category_id = ?').get(id) as { count: number }
+  if (entriesCount.count > 0) throw new Error('Cannot delete category with entries')
+  
+  // Also clear it from active_timer if it exists there
+  db.prepare('DELETE FROM active_timer WHERE category_id = ?').run(id)
+  
   return db.prepare('DELETE FROM categories WHERE id = ?').run(id)
 }
 
 export function getEntries(startDate?: string, endDate?: string) {
   if (startDate && endDate) {
-    return db.prepare(
-      'SELECT e.*, c.name as category_name, c.color as category_color FROM entries e JOIN categories c ON e.category_id = c.id WHERE date BETWEEN ? AND ? ORDER BY date DESC'
-    ).all(startDate, endDate)
+    return db.prepare('SELECT e.*, c.name as category_name, c.color as category_color FROM entries e JOIN categories c ON e.category_id = c.id WHERE date BETWEEN ? AND ? ORDER BY date DESC, e.id DESC').all(startDate, endDate)
   }
-  return db.prepare(
-    'SELECT e.*, c.name as category_name, c.color as category_color FROM entries e JOIN categories c ON e.category_id = c.id ORDER BY date DESC'
-  ).all()
+  return db.prepare('SELECT e.*, c.name as category_name, c.color as category_color FROM entries e JOIN categories c ON e.category_id = c.id ORDER BY date DESC, e.id DESC').all()
 }
 
 export function addEntry(categoryId: number, duration: number, date: string, notes: string) {
-  return db.prepare('INSERT INTO entries (category_id, duration, date, notes) VALUES (?, ?, ?, ?)').run(
-    categoryId,
-    duration,
-    date,
-    notes
-  )
+  return db.prepare('INSERT INTO entries (category_id, duration, date, notes) VALUES (?, ?, ?, ?)').run(categoryId, duration, date, notes)
 }
 
 export function deleteEntry(id: number) {
@@ -199,49 +181,22 @@ export function deleteEntry(id: number) {
 }
 
 export function updateEntry(id: number, categoryId: number, duration: number, date: string, notes: string) {
-  return db.prepare('UPDATE entries SET category_id = ?, duration = ?, date = ?, notes = ? WHERE id = ?').run(
-    categoryId,
-    duration,
-    date,
-    notes,
-    id
-  )
+  return db.prepare('UPDATE entries SET category_id = ?, duration = ?, date = ?, notes = ? WHERE id = ?').run(categoryId, duration, date, notes, id)
 }
 
 export function getSummary() {
-  return db.prepare(`
-    SELECT 
-      c.name, 
-      c.color,
-      c.weekly_target,
-      IFNULL(SUM(e.duration), 0) as total_duration
-    FROM categories c
-    LEFT JOIN entries e ON c.id = e.category_id
-    GROUP BY c.id
-  `).all()
+  return db.prepare('SELECT c.name, c.color, c.weekly_target, c.daily_target, IFNULL(SUM(e.duration), 0) as total_duration FROM categories c LEFT JOIN entries e ON c.id = e.category_id GROUP BY c.id').all()
 }
 
 export function getSummaryByRange(startDate: string, endDate?: string) {
   const query = endDate 
-    ? `SELECT c.name, c.color, c.weekly_target, IFNULL(SUM(e.duration), 0) as total_duration 
-       FROM categories c 
-       LEFT JOIN entries e ON c.id = e.category_id AND e.date BETWEEN ? AND ?
-       GROUP BY c.id`
-    : `SELECT c.name, c.color, c.weekly_target, IFNULL(SUM(e.duration), 0) as total_duration 
-       FROM categories c 
-       LEFT JOIN entries e ON c.id = e.category_id AND e.date >= ?
-       GROUP BY c.id`;
-  
-  const params = endDate ? [startDate, endDate] : [startDate];
-  return db.prepare(query).all(...params)
+    ? `SELECT c.name, c.color, c.weekly_target, c.daily_target, IFNULL(SUM(e.duration), 0) as total_duration FROM categories c LEFT JOIN entries e ON c.id = e.category_id AND e.date BETWEEN ? AND ? GROUP BY c.id`
+    : `SELECT c.name, c.color, c.weekly_target, c.daily_target, IFNULL(SUM(e.duration), 0) as total_duration FROM categories c LEFT JOIN entries e ON c.id = e.category_id AND e.date >= ? GROUP BY c.id`
+  return db.prepare(query).all(endDate ? [startDate, endDate] : [startDate])
 }
 
 export function saveActiveTimer(categoryId: number, startTime: string, notes: string) {
-  return db.prepare('INSERT OR REPLACE INTO active_timer (id, category_id, start_time, notes) VALUES (1, ?, ?, ?)').run(
-    categoryId,
-    startTime,
-    notes
-  )
+  return db.prepare('INSERT OR REPLACE INTO active_timer (id, category_id, start_time, notes) VALUES (1, ?, ?, ?)').run(categoryId, startTime, notes)
 }
 
 export function getActiveTimer() {

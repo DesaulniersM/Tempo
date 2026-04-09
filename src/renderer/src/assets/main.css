@@ -255,19 +255,92 @@ body {
   text-shadow: 0 4px 24px var(--primary-glow);
 }
 
-.notes-input {
-  background: var(--bg-main);
-  border: 1px solid var(--border);
-  color: var(--text-main);
+/* Form Elements Refinement */
+input, select, textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
   border-radius: 8px;
-  padding: 1rem;
-  resize: none;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-main);
+  font-family: inherit;
   font-size: 0.9375rem;
+  transition: all 0.2s;
+  outline: none;
 }
 
-.notes-input:focus {
-  outline: 2px solid var(--primary-glow);
+input:focus, select:focus, textarea:focus {
   border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.form-group label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.5rem;
+}
+
+/* Progress Bars & Golden State */
+.progress-bar-bg {
+  height: 10px;
+  background: var(--bg-main);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.golden-state {
+  box-shadow: 0 0 20px var(--glow-color), 0 0 40px var(--glow-color);
+  animation: breathe 4s infinite ease-in-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.golden-state::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255,255,255,0.6), 
+    rgba(255,255,255,0.8), 
+    rgba(255,255,255,0.6), 
+    transparent
+  );
+  animation: shine 3s infinite linear;
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes shine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
 /* Table Style */
