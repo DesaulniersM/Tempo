@@ -33,6 +33,6 @@
 - [x] **The "Zen" Sound Library:** High-quality audio feedback for Start/Stop/Goal-reached events. (Implemented)
 - [ ] **Focus Soundscapes:** Integrated white/pink/brown noise generator active only during timers.
 - [ ] **Milestone Celebrations:** 
-    - [ ] **Golden State:** Progress bars glow/breathe when weekly target is 100% met.
+    - [x] **Golden State:** Progress bars glow/breathe when weekly target is 100% met.
     - [ ] **Achievement Badges:** (Optional) Unlockable trophies for hours/time-of-day milestones.
     - [ ] **Monday Victory Lap:** (Optional) A "Week in Review" summary screen.

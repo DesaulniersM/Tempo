@@ -6,8 +6,8 @@ const api = {
   getCategories: () => electronAPI.ipcRenderer.invoke('db:getCategories'),
   getEntries: (startDate?: string, endDate?: string) =>
     electronAPI.ipcRenderer.invoke('db:getEntries', startDate, endDate),
-  addEntry: (categoryId: number, duration: number, date: string, notes: string) =>
-    electronAPI.ipcRenderer.invoke('db:addEntry', categoryId, duration, date, notes),
+  addEntry: (categoryId: number, duration: number, date: string, notes: string, source?: string) =>
+    electronAPI.ipcRenderer.invoke('db:addEntry', categoryId, duration, date, notes, source),
   getSummary: () => electronAPI.ipcRenderer.invoke('db:getSummary'),
   getSummaryByRange: (startDate: string, endDate?: string) =>
     electronAPI.ipcRenderer.invoke('db:getSummaryByRange', startDate, endDate),
@@ -28,9 +28,6 @@ const api = {
   readFile: (filePath: string) => electronAPI.ipcRenderer.invoke('file:read', filePath)
 }
 
-// Use `contextBridge` APIs to expose Electron APIs to
-// renderer only if context isolation is enabled, otherwise
-// just add to the DOM global.
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)

@@ -74,7 +74,8 @@ const Insights: React.FC = () => {
     }))
 
     entries.forEach(entry => {
-      if (entry.created_at) {
+      // Skip imported entries as they lack accurate time-of-day metadata
+      if (entry.created_at && entry.source !== 'import') {
         const date = new Date(entry.created_at)
         const hour = date.getHours()
         hours[hour].count += entry.duration

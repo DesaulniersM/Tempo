@@ -14,6 +14,7 @@ export interface Entry {
   duration: number
   date: string
   notes: string
+  source: 'timer' | 'manual' | 'import'
   created_at: string
 }
 

@@ -17,7 +17,8 @@ declare global {
         categoryId: number,
         duration: number,
         date: string,
-        notes: string
+        notes: string,
+        source?: string
       ) => Promise<void>
       getSummary: () => Promise<Summary[]>
       getSummaryByRange: (startDate: string, endDate?: string) => Promise<Summary[]>

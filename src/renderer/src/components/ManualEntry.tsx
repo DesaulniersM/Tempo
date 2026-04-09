@@ -24,7 +24,7 @@ const ManualEntry: React.FC<ManualEntryProps> = ({ categories, onEntryAdded }) =
       return
     }
 
-    await window.api.addEntry(categoryId, Number(duration), date, notes)
+    await window.api.addEntry(categoryId, Number(duration), date, notes, 'manual')
     
     setCategoryId(null)
     setDuration('')

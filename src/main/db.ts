@@ -11,9 +11,7 @@ export function initDb() {
     if (!fs.existsSync(userDataPath)) {
       fs.mkdirSync(userDataPath, { recursive: true })
     }
-    
     const dbPath = join(userDataPath, 'scholar-track.sqlite')
-    
     try {
       db = new Database(dbPath)
 
@@ -27,14 +25,10 @@ export function initDb() {
         )
       `)
 
-      // Migration check
-      const tableInfo = db.prepare("PRAGMA table_info(categories)").all()
-      if (!tableInfo.some((col: any) => col.name === 'weekly_target')) {
-        db.exec("ALTER TABLE categories ADD COLUMN weekly_target REAL DEFAULT 0")
-      }
-      if (!tableInfo.some((col: any) => col.name === 'daily_target')) {
-        db.exec("ALTER TABLE categories ADD COLUMN daily_target REAL DEFAULT 0")
-      }
+      // Migration check for categories
+      const catInfo = db.prepare("PRAGMA table_info(categories)").all()
+      if (!catInfo.some((col: any) => col.name === 'weekly_target')) db.exec("ALTER TABLE categories ADD COLUMN weekly_target REAL DEFAULT 0")
+      if (!catInfo.some((col: any) => col.name === 'daily_target')) db.exec("ALTER TABLE categories ADD COLUMN daily_target REAL DEFAULT 0")
 
       db.exec(`
         CREATE TABLE IF NOT EXISTS entries (
@@ -43,10 +37,19 @@ export function initDb() {
           duration REAL NOT NULL,
           date TEXT NOT NULL,
           notes TEXT,
+          source TEXT DEFAULT 'manual',
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY (category_id) REFERENCES categories (id)
         )
       `)
+
+      // Migration check for entries (source column)
+      const entryInfo = db.prepare("PRAGMA table_info(entries)").all()
+      if (!entryInfo.some((col: any) => col.name === 'source')) {
+        db.exec("ALTER TABLE entries ADD COLUMN source TEXT DEFAULT 'manual'")
+        // Attempt to tag existing imported data based on notes
+        db.exec("UPDATE entries SET source = 'import' WHERE notes LIKE 'Imported%'")
+      }
 
       db.exec(`
         CREATE TABLE IF NOT EXISTS active_timer (
@@ -60,7 +63,6 @@ export function initDb() {
 
       const countStmt = db.prepare('SELECT COUNT(*) as count FROM categories')
       const result = countStmt.get() as { count: number }
-      
       if (result.count === 0) {
         const defaults = [
           { name: 'Research', color: '#3b82f6' },
@@ -70,9 +72,7 @@ export function initDb() {
           { name: 'NREL', color: '#ef4444' }
         ]
         const insert = db.prepare('INSERT INTO categories (name, color) VALUES (?, ?)')
-        for (const cat of defaults) {
-          insert.run(cat.name, cat.color)
-        }
+        for (const cat of defaults) insert.run(cat.name, cat.color)
       }
     } catch (error) {
       console.error('Failed to initialize database:', error)
@@ -81,19 +81,14 @@ export function initDb() {
   }
 }
 
-export function getCategories() {
-  return db.prepare('SELECT * FROM categories').all()
-}
+export function getCategories() { return db.prepare('SELECT * FROM categories').all() }
+export function addCategory(name: string, color: string) { return db.prepare('INSERT OR IGNORE INTO categories (name, color) VALUES (?, ?)').run(name, color) }
 
-export function addCategory(name: string, color: string) {
-  return db.prepare('INSERT OR IGNORE INTO categories (name, color) VALUES (?, ?)').run(name, color)
-}
-
-export function importEntries(entries: { category_id: number, duration: number, date: string, notes: string }[]) {
-  const insert = db.prepare('INSERT INTO entries (category_id, duration, date, notes) VALUES (?, ?, ?, ?)')
+export function importEntries(entries: { category_id: number, duration: number, date: string, notes: string, source?: string }[]) {
+  const insert = db.prepare('INSERT INTO entries (category_id, duration, date, notes, source) VALUES (?, ?, ?, ?, ?)')
   const transaction = db.transaction((data) => {
     for (const entry of data) {
-      insert.run(entry.category_id, entry.duration, entry.date, entry.notes)
+      insert.run(entry.category_id, entry.duration, entry.date, entry.notes, entry.source || 'import')
     }
   })
   return transaction(entries)
@@ -107,7 +102,6 @@ export function importRawData(rawData: string) {
   const headers = firstRow.split(delimiter).map(h => h.trim().replace(/^"|"$/g, ''))
   const ignoredColumns = ['date', 'total', 'weekly total', 'average per day', 'notes', 'cumulative total', 'total days off']
   const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#ec4899', '#06b6d4']
-  
   const transaction = db.transaction(() => {
     const categoryMap: Record<number, number> = {}
     for (let j = 1; j < headers.length; j++) {
@@ -125,9 +119,7 @@ export function importRawData(rawData: string) {
       let formattedDate = ''
       const parts = dateStr.split(/[-/]/)
       if (parts.length === 3) {
-        const m = parts[0].padStart(2, '0')
-        const d = parts[1].padStart(2, '0')
-        let y = parts[2]
+        const m = parts[0].padStart(2, '0'); const d = parts[1].padStart(2, '0'); let y = parts[2]
         if (y.length === 2) y = `20${y}`
         if (parseInt(m) <= 12) formattedDate = `${y}-${m}-${d}`
       }
@@ -135,8 +127,8 @@ export function importRawData(rawData: string) {
       for (const [headerIndex, catId] of Object.entries(categoryMap)) {
         const duration = parseFloat(cols[parseInt(headerIndex)])
         if (!isNaN(duration) && duration > 0) {
-          db.prepare('INSERT INTO entries (category_id, duration, date, notes) VALUES (?, ?, ?, ?)').run(
-            catId, duration, formattedDate, 'Imported History'
+          db.prepare('INSERT INTO entries (category_id, duration, date, notes, source) VALUES (?, ?, ?, ?, ?)').run(
+            catId, duration, formattedDate, 'Imported History', 'import'
           )
           count++
         }
@@ -149,44 +141,30 @@ export function importRawData(rawData: string) {
 }
 
 export function updateCategory(id: number, name: string, color: string, weeklyTarget: number, dailyTarget: number) {
-  return db.prepare('UPDATE categories SET name = ?, color = ?, weekly_target = ?, daily_target = ? WHERE id = ?').run(
-    name, color, weeklyTarget, dailyTarget, id
-  )
+  return db.prepare('UPDATE categories SET name = ?, color = ?, weekly_target = ?, daily_target = ? WHERE id = ?').run(name, color, weeklyTarget, dailyTarget, id)
 }
 
 export function deleteCategory(id: number) {
-  // Check if there are entries using this category
   const entriesCount = db.prepare('SELECT COUNT(*) as count FROM entries WHERE category_id = ?').get(id) as { count: number }
   if (entriesCount.count > 0) throw new Error('Cannot delete category with entries')
-  
-  // Also clear it from active_timer if it exists there
   db.prepare('DELETE FROM active_timer WHERE category_id = ?').run(id)
-  
   return db.prepare('DELETE FROM categories WHERE id = ?').run(id)
 }
 
 export function getEntries(startDate?: string, endDate?: string) {
-  if (startDate && endDate) {
-    return db.prepare('SELECT e.*, c.name as category_name, c.color as category_color FROM entries e JOIN categories c ON e.category_id = c.id WHERE date BETWEEN ? AND ? ORDER BY date DESC, e.id DESC').all(startDate, endDate)
-  }
-  return db.prepare('SELECT e.*, c.name as category_name, c.color as category_color FROM entries e JOIN categories c ON e.category_id = c.id ORDER BY date DESC, e.id DESC').all()
+  const base = 'SELECT e.*, c.name as category_name, c.color as category_color FROM entries e JOIN categories c ON e.category_id = c.id'
+  if (startDate && endDate) return db.prepare(`${base} WHERE date BETWEEN ? AND ? ORDER BY date DESC, e.id DESC`).all(startDate, endDate)
+  if (startDate) return db.prepare(`${base} WHERE date >= ? ORDER BY date DESC, e.id DESC`).all(startDate)
+  return db.prepare(`${base} ORDER BY date DESC, e.id DESC`).all()
 }
 
-export function addEntry(categoryId: number, duration: number, date: string, notes: string) {
-  return db.prepare('INSERT INTO entries (category_id, duration, date, notes) VALUES (?, ?, ?, ?)').run(categoryId, duration, date, notes)
+export function addEntry(categoryId: number, duration: number, date: string, notes: string, source: string = 'manual') {
+  return db.prepare('INSERT INTO entries (category_id, duration, date, notes, source) VALUES (?, ?, ?, ?, ?)').run(categoryId, duration, date, notes, source)
 }
 
-export function deleteEntry(id: number) {
-  return db.prepare('DELETE FROM entries WHERE id = ?').run(id)
-}
-
-export function updateEntry(id: number, categoryId: number, duration: number, date: string, notes: string) {
-  return db.prepare('UPDATE entries SET category_id = ?, duration = ?, date = ?, notes = ? WHERE id = ?').run(categoryId, duration, date, notes, id)
-}
-
-export function getSummary() {
-  return db.prepare('SELECT c.name, c.color, c.weekly_target, c.daily_target, IFNULL(SUM(e.duration), 0) as total_duration FROM categories c LEFT JOIN entries e ON c.id = e.category_id GROUP BY c.id').all()
-}
+export function deleteEntry(id: number) { return db.prepare('DELETE FROM entries WHERE id = ?').run(id) }
+export function updateEntry(id: number, categoryId: number, duration: number, date: string, notes: string) { return db.prepare('UPDATE entries SET category_id = ?, duration = ?, date = ?, notes = ? WHERE id = ?').run(categoryId, duration, date, notes, id) }
+export function getSummary() { return db.prepare('SELECT c.name, c.color, c.weekly_target, c.daily_target, IFNULL(SUM(e.duration), 0) as total_duration FROM categories c LEFT JOIN entries e ON c.id = e.category_id GROUP BY c.id').all() }
 
 export function getSummaryByRange(startDate: string, endDate?: string) {
   const query = endDate 
@@ -195,14 +173,6 @@ export function getSummaryByRange(startDate: string, endDate?: string) {
   return db.prepare(query).all(endDate ? [startDate, endDate] : [startDate])
 }
 
-export function saveActiveTimer(categoryId: number, startTime: string, notes: string) {
-  return db.prepare('INSERT OR REPLACE INTO active_timer (id, category_id, start_time, notes) VALUES (1, ?, ?, ?)').run(categoryId, startTime, notes)
-}
-
-export function getActiveTimer() {
-  return db.prepare('SELECT * FROM active_timer WHERE id = 1').get()
-}
-
-export function clearActiveTimer() {
-  return db.prepare('DELETE FROM active_timer WHERE id = 1').run()
-}
+export function saveActiveTimer(categoryId: number, startTime: string, notes: string) { return db.prepare('INSERT OR REPLACE INTO active_timer (id, category_id, start_time, notes) VALUES (1, ?, ?, ?)').run(categoryId, startTime, notes) }
+export function getActiveTimer() { return db.prepare('SELECT * FROM active_timer WHERE id = 1').get() }
+export function clearActiveTimer() { return db.prepare('DELETE FROM active_timer WHERE id = 1').run() }
