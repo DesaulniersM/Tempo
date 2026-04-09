@@ -4,6 +4,9 @@
 
 ![Tempo Icon](resources/icon.png)
 
+## ✨ Dashboard Preview
+![Tempo Dashboard](images/Dashboard.png)
+
 ## 🚀 Key Features
 
 -   **Deep Work Flow Timer:** A prominent, distraction-free timer with Zen audio cues to help you enter and maintain flow states.
