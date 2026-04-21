@@ -41,6 +41,7 @@ export function initDb() {
           date TEXT NOT NULL,
           notes TEXT,
           source TEXT DEFAULT 'manual',
+          timezone TEXT,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY (category_id) REFERENCES categories (id)
         )
@@ -50,6 +51,9 @@ export function initDb() {
       if (!entryInfo.some((col: any) => col.name === 'source')) {
         db.exec("ALTER TABLE entries ADD COLUMN source TEXT DEFAULT 'manual'")
         db.exec("UPDATE entries SET source = 'import' WHERE notes LIKE 'Imported%'")
+      }
+      if (!entryInfo.some((col: any) => col.name === 'timezone')) {
+        db.exec("ALTER TABLE entries ADD COLUMN timezone TEXT")
       }
 
       db.exec(`
@@ -163,9 +167,10 @@ export function getEntries(startDate?: string, endDate?: string) {
   return db.prepare(`${base} ORDER BY date DESC, e.id DESC`).all()
 }
 
-export function addEntry(categoryId: number, duration: number, date: string, notes: string, source: string = 'manual', createdAt?: string) {
+export function addEntry(categoryId: number, duration: number, date: string, notes: string, source: string = 'manual', createdAt?: string, timezone?: string) {
   const ts = createdAt || new Date().toISOString()
-  return db.prepare('INSERT INTO entries (category_id, duration, date, notes, source, created_at) VALUES (?, ?, ?, ?, ?, ?)').run(categoryId, duration, date, notes, source, ts)
+  const tz = timezone || Intl.DateTimeFormat().resolvedOptions().timeZone
+  return db.prepare('INSERT INTO entries (category_id, duration, date, notes, source, created_at, timezone) VALUES (?, ?, ?, ?, ?, ?, ?)').run(categoryId, duration, date, notes, source, ts, tz)
 }
 
 export function deleteEntry(id: number) { return db.prepare('DELETE FROM entries WHERE id = ?').run(id) }

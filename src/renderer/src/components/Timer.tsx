@@ -113,8 +113,9 @@ const Timer: React.FC<TimerProps> = ({
     const now = new Date()
     const localDate = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`
     const createdAt = now.toISOString()
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
-    await window.api.addEntry(activeCategoryId, durationHours, localDate, notes, 'timer', createdAt)
+    await window.api.addEntry(activeCategoryId, durationHours, localDate, notes, 'timer', createdAt, timezone)
     await window.api.clearActiveTimer()
     
     setIsRunning(false)

@@ -16,6 +16,7 @@ export interface Entry {
   date: string
   notes: string
   source: 'timer' | 'manual' | 'import'
+  timezone: string | null
   created_at: string
 }
 

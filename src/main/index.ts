@@ -64,8 +64,8 @@ async function createWindow(): Promise<void> {
   // Register Database IPC handlers
   ipcMain.handle('db:getCategories', () => getCategories())
   ipcMain.handle('db:getEntries', (_, startDate, endDate) => getEntries(startDate, endDate))
-  ipcMain.handle('db:addEntry', (_, categoryId, duration, date, notes, source, createdAt) =>
-    addEntry(categoryId, duration, date, notes, source, createdAt)
+  ipcMain.handle('db:addEntry', (_, categoryId, duration, date, notes, source, createdAt, timezone) =>
+    addEntry(categoryId, duration, date, notes, source, createdAt, timezone)
   )
   ipcMain.handle('db:importEntries', (_, entries) => importEntries(entries))
   ipcMain.handle('db:importRawData', (_, rawData) => importRawData(rawData))

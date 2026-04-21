@@ -6,8 +6,8 @@ const api = {
   getCategories: () => electronAPI.ipcRenderer.invoke('db:getCategories'),
   getEntries: (startDate?: string, endDate?: string) =>
     electronAPI.ipcRenderer.invoke('db:getEntries', startDate, endDate),
-  addEntry: (categoryId: number, duration: number, date: string, notes: string, source?: string, createdAt?: string) =>
-    electronAPI.ipcRenderer.invoke('db:addEntry', categoryId, duration, date, notes, source, createdAt),
+  addEntry: (categoryId: number, duration: number, date: string, notes: string, source?: string, createdAt?: string, timezone?: string) =>
+    electronAPI.ipcRenderer.invoke('db:addEntry', categoryId, duration, date, notes, source, createdAt, timezone),
   getSummary: () => electronAPI.ipcRenderer.invoke('db:getSummary'),
   getSummaryByRange: (startDate: string, endDate?: string) =>
     electronAPI.ipcRenderer.invoke('db:getSummaryByRange', startDate, endDate),

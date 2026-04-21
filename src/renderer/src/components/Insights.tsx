@@ -76,7 +76,15 @@ const Insights: React.FC = () => {
     entries.forEach(entry => {
       // Skip imported entries as they lack accurate time-of-day metadata
       if (entry.created_at && entry.source !== 'import') {
-        const endTime = new Date(entry.created_at).getTime()
+        // Robust UTC normalization: 
+        // 1. If it already has Z or an offset, use it as is.
+        // 2. If it's a bare 'YYYY-MM-DD HH:MM:SS' (SQLite default), convert to ISO 'T' and append 'Z'.
+        let normalizedDate = entry.created_at
+        if (!normalizedDate.includes('Z') && !normalizedDate.includes('+') && !/T.*[\+\-]/.test(normalizedDate)) {
+           normalizedDate = normalizedDate.replace(' ', 'T') + 'Z'
+        }
+        
+        const endTime = new Date(normalizedDate).getTime()
         const durationMs = entry.duration * 3600 * 1000
         const startTime = endTime - durationMs
 

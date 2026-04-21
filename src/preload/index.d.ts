@@ -19,7 +19,8 @@ declare global {
         date: string,
         notes: string,
         source?: string,
-        createdAt?: string
+        createdAt?: string,
+        timezone?: string
       ) => Promise<void>
       getSummary: () => Promise<Summary[]>
       getSummaryByRange: (startDate: string, endDate?: string) => Promise<Summary[]>

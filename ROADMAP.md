@@ -42,3 +42,9 @@
 - [x] **Aggregated Progress:** Time logged to a sub-project automatically counts toward the Parent's total goal. (Implemented)
 - [x] **Nested Dashboard UI:** Progress bars indented under their parents for a clear project breakdown. (Implemented)
 
+## Phase 8: Architectural Refinement (Scaling & Maintainability)
+- [ ] **Decouple Business Logic:** Extract complex calculations (Streaks, Duration Distribution, Goals) from UI components into testable service layers.
+- [ ] **Type-Safe SQL:** Transition from raw SQL strings in `db.ts` to a type-safe query builder like **Kysely** to prevent runtime schema errors.
+- [ ] **Data Fetching Strategy:** Implement **TanStack Query** for efficient data synchronization, caching, and to reduce "prop drilling" from `App.tsx`.
+- [ ] **Component Granularity:** Refactor "God Components" (Dashboard, Insights) into smaller, focused feature directories for easier navigation and testing.
+

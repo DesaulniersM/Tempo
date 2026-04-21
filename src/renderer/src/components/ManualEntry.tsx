@@ -28,8 +28,9 @@ const ManualEntry: React.FC<ManualEntryProps> = ({ categories, onEntryAdded }) =
     // This allows the duration-distribution logic to work reasonably.
     const [y, m, d] = date.split('-').map(Number)
     const createdAt = new Date(y, m - 1, d, 23, 59, 59, 999).toISOString()
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
-    await window.api.addEntry(categoryId, Number(duration), date, notes, 'manual', createdAt)
+    await window.api.addEntry(categoryId, Number(duration), date, notes, 'manual', createdAt, timezone)
     
     setCategoryId(null)
     setDuration('')
