@@ -9,7 +9,7 @@
 - [x] **Comprehensive Data Views:** View total hours and breakdowns by week, month, 3m, 6m, 1y, and all-time. (Implemented)
 - [x] **Weekly "Flow" Heatmap:** A visual grid (like GitHub's) showing your daily intensity. (Implemented)
 - [x] **Productivity Tendencies:** A chart showing which hours of the day you actually log the most research time. (Implemented)
-- [x] **Weekly Targets:** Visual progress bars for "Research Hours" vs. "TA/Class Hours." (Implemented)
+- [x] **Daily & Weekly Targets:** Visual progress bars for research/work goals. (Implemented)
 
 ## Phase 3: System Integration (The "Native Feel")
 - [x] **Linux Desktop Launcher:** Making the app searchable via the Ubuntu activities menu. (Implemented)
@@ -33,6 +33,12 @@
 - [x] **The "Zen" Sound Library:** High-quality audio feedback for Start/Stop/Goal-reached events. (Implemented)
 - [ ] **Focus Soundscapes:** Integrated white/pink/brown noise generator active only during timers.
 - [ ] **Milestone Celebrations:** 
-    - [x] **Golden State:** Progress bars glow/breathe when weekly target is 100% met.
+    - [x] **Golden State:** Progress bars glow/breathe when weekly target is 100% met. (Implemented)
     - [ ] **Achievement Badges:** (Optional) Unlockable trophies for hours/time-of-day milestones.
     - [ ] **Monday Victory Lap:** (Optional) A "Week in Review" summary screen.
+
+## Phase 7: Project Hierarchy (Sub-Tasks & Nested Goals)
+- [x] **Parent-Child Projects:** Link sub-projects (e.g., "Reading") to a parent (e.g., "Research") in Settings. (Implemented)
+- [x] **Aggregated Progress:** Time logged to a sub-project automatically counts toward the Parent's total goal. (Implemented)
+- [x] **Nested Dashboard UI:** Progress bars indented under their parents for a clear project breakdown. (Implemented)
+

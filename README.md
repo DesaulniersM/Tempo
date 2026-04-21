@@ -65,9 +65,14 @@ npm run dev
 ```
 
 ## 📦 Building for Production
-To create a standalone, portable Linux application (.AppImage):
+To create a standalone, portable application:
 
-### For Standard PCs (x64)
+### For Windows (.exe)
+```bash
+npm run build:win
+```
+
+### For Linux (.AppImage)
 ```bash
 npm run build:linux
 ```

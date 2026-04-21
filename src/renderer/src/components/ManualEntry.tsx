@@ -24,7 +24,12 @@ const ManualEntry: React.FC<ManualEntryProps> = ({ categories, onEntryAdded }) =
       return
     }
 
-    await window.api.addEntry(categoryId, Number(duration), date, notes, 'manual')
+    // For manual entries, we'll assume the work ended at the end of the selected day
+    // This allows the duration-distribution logic to work reasonably.
+    const [y, m, d] = date.split('-').map(Number)
+    const createdAt = new Date(y, m - 1, d, 23, 59, 59, 999).toISOString()
+
+    await window.api.addEntry(categoryId, Number(duration), date, notes, 'manual', createdAt)
     
     setCategoryId(null)
     setDuration('')

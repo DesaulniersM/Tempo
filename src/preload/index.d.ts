@@ -18,7 +18,8 @@ declare global {
         duration: number,
         date: string,
         notes: string,
-        source?: string
+        source?: string,
+        createdAt?: string
       ) => Promise<void>
       getSummary: () => Promise<Summary[]>
       getSummaryByRange: (startDate: string, endDate?: string) => Promise<Summary[]>
@@ -33,8 +34,8 @@ declare global {
       saveActiveTimer: (categoryId: number, startTime: string, notes: string) => Promise<void>
       getActiveTimer: () => Promise<ActiveTimer | null>
       clearActiveTimer: () => Promise<void>
-      addCategory: (name: string, color: string) => Promise<void>
-      updateCategory: (id: number, name: string, color: string, weeklyTarget: number, dailyTarget: number) => Promise<void>
+      addCategory: (name: string, color: string, parentId?: number | null) => Promise<void>
+      updateCategory: (id: number, name: string, color: string, weeklyTarget: number, dailyTarget: number, parentId?: number | null) => Promise<void>
       deleteCategory: (id: number) => Promise<void>
       importEntries: (entries: any[]) => Promise<void>
       importRawData: (rawData: string) => Promise<{ success: boolean, count?: number, message?: string }>

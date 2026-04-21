@@ -76,9 +76,25 @@ const Insights: React.FC = () => {
     entries.forEach(entry => {
       // Skip imported entries as they lack accurate time-of-day metadata
       if (entry.created_at && entry.source !== 'import') {
-        const date = new Date(entry.created_at)
-        const hour = date.getHours()
-        hours[hour].count += entry.duration
+        const endTime = new Date(entry.created_at).getTime()
+        const durationMs = entry.duration * 3600 * 1000
+        const startTime = endTime - durationMs
+
+        let current = startTime
+        while (current < endTime) {
+          const nextHour = new Date(current)
+          nextHour.setMinutes(0, 0, 0)
+          nextHour.setMilliseconds(0)
+          nextHour.setHours(nextHour.getHours() + 1)
+          
+          const chunkEnd = Math.min(nextHour.getTime(), endTime)
+          const chunkDurationHours = (chunkEnd - current) / (3600 * 1000)
+          
+          const hourOfDay = new Date(current).getHours()
+          hours[hourOfDay].count += chunkDurationHours
+          
+          current = chunkEnd
+        }
       }
     })
     return hours

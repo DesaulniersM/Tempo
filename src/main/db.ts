@@ -21,14 +21,17 @@ export function initDb() {
           name TEXT UNIQUE NOT NULL,
           color TEXT NOT NULL,
           weekly_target REAL DEFAULT 0,
-          daily_target REAL DEFAULT 0
+          daily_target REAL DEFAULT 0,
+          parent_id INTEGER,
+          FOREIGN KEY (parent_id) REFERENCES categories (id)
         )
       `)
 
-      // Migration check for categories
+      // Migration checks
       const catInfo = db.prepare("PRAGMA table_info(categories)").all()
       if (!catInfo.some((col: any) => col.name === 'weekly_target')) db.exec("ALTER TABLE categories ADD COLUMN weekly_target REAL DEFAULT 0")
       if (!catInfo.some((col: any) => col.name === 'daily_target')) db.exec("ALTER TABLE categories ADD COLUMN daily_target REAL DEFAULT 0")
+      if (!catInfo.some((col: any) => col.name === 'parent_id')) db.exec("ALTER TABLE categories ADD COLUMN parent_id INTEGER")
 
       db.exec(`
         CREATE TABLE IF NOT EXISTS entries (
@@ -43,11 +46,9 @@ export function initDb() {
         )
       `)
 
-      // Migration check for entries (source column)
       const entryInfo = db.prepare("PRAGMA table_info(entries)").all()
       if (!entryInfo.some((col: any) => col.name === 'source')) {
         db.exec("ALTER TABLE entries ADD COLUMN source TEXT DEFAULT 'manual'")
-        // Attempt to tag existing imported data based on notes
         db.exec("UPDATE entries SET source = 'import' WHERE notes LIKE 'Imported%'")
       }
 
@@ -82,7 +83,9 @@ export function initDb() {
 }
 
 export function getCategories() { return db.prepare('SELECT * FROM categories').all() }
-export function addCategory(name: string, color: string) { return db.prepare('INSERT OR IGNORE INTO categories (name, color) VALUES (?, ?)').run(name, color) }
+export function addCategory(name: string, color: string, parentId: number | null = null) { 
+  return db.prepare('INSERT OR IGNORE INTO categories (name, color, parent_id) VALUES (?, ?, ?)').run(name, color, parentId) 
+}
 
 export function importEntries(entries: { category_id: number, duration: number, date: string, notes: string, source?: string }[]) {
   const insert = db.prepare('INSERT INTO entries (category_id, duration, date, notes, source) VALUES (?, ?, ?, ?, ?)')
@@ -140,8 +143,10 @@ export function importRawData(rawData: string) {
   return { success: true, count: importedCount }
 }
 
-export function updateCategory(id: number, name: string, color: string, weeklyTarget: number, dailyTarget: number) {
-  return db.prepare('UPDATE categories SET name = ?, color = ?, weekly_target = ?, daily_target = ? WHERE id = ?').run(name, color, weeklyTarget, dailyTarget, id)
+export function updateCategory(id: number, name: string, color: string, weeklyTarget: number, dailyTarget: number, parentId: number | null = null) {
+  return db.prepare('UPDATE categories SET name = ?, color = ?, weekly_target = ?, daily_target = ?, parent_id = ? WHERE id = ?').run(
+    name, color, weeklyTarget, dailyTarget, parentId, id
+  )
 }
 
 export function deleteCategory(id: number) {
@@ -152,24 +157,28 @@ export function deleteCategory(id: number) {
 }
 
 export function getEntries(startDate?: string, endDate?: string) {
-  const base = 'SELECT e.*, c.name as category_name, c.color as category_color FROM entries e JOIN categories c ON e.category_id = c.id'
+  const base = 'SELECT e.*, c.name as category_name, c.color as category_color, c.parent_id FROM entries e JOIN categories c ON e.category_id = c.id'
   if (startDate && endDate) return db.prepare(`${base} WHERE date BETWEEN ? AND ? ORDER BY date DESC, e.id DESC`).all(startDate, endDate)
   if (startDate) return db.prepare(`${base} WHERE date >= ? ORDER BY date DESC, e.id DESC`).all(startDate)
   return db.prepare(`${base} ORDER BY date DESC, e.id DESC`).all()
 }
 
-export function addEntry(categoryId: number, duration: number, date: string, notes: string, source: string = 'manual') {
-  return db.prepare('INSERT INTO entries (category_id, duration, date, notes, source) VALUES (?, ?, ?, ?, ?)').run(categoryId, duration, date, notes, source)
+export function addEntry(categoryId: number, duration: number, date: string, notes: string, source: string = 'manual', createdAt?: string) {
+  const ts = createdAt || new Date().toISOString()
+  return db.prepare('INSERT INTO entries (category_id, duration, date, notes, source, created_at) VALUES (?, ?, ?, ?, ?, ?)').run(categoryId, duration, date, notes, source, ts)
 }
 
 export function deleteEntry(id: number) { return db.prepare('DELETE FROM entries WHERE id = ?').run(id) }
 export function updateEntry(id: number, categoryId: number, duration: number, date: string, notes: string) { return db.prepare('UPDATE entries SET category_id = ?, duration = ?, date = ?, notes = ? WHERE id = ?').run(categoryId, duration, date, notes, id) }
-export function getSummary() { return db.prepare('SELECT c.name, c.color, c.weekly_target, c.daily_target, IFNULL(SUM(e.duration), 0) as total_duration FROM categories c LEFT JOIN entries e ON c.id = e.category_id GROUP BY c.id').all() }
+
+export function getSummary() { 
+  return db.prepare('SELECT c.id, c.name, c.color, c.weekly_target, c.daily_target, c.parent_id, IFNULL(SUM(e.duration), 0) as total_duration FROM categories c LEFT JOIN entries e ON c.id = e.category_id GROUP BY c.id').all() 
+}
 
 export function getSummaryByRange(startDate: string, endDate?: string) {
   const query = endDate 
-    ? `SELECT c.name, c.color, c.weekly_target, c.daily_target, IFNULL(SUM(e.duration), 0) as total_duration FROM categories c LEFT JOIN entries e ON c.id = e.category_id AND e.date BETWEEN ? AND ? GROUP BY c.id`
-    : `SELECT c.name, c.color, c.weekly_target, c.daily_target, IFNULL(SUM(e.duration), 0) as total_duration FROM categories c LEFT JOIN entries e ON c.id = e.category_id AND e.date >= ? GROUP BY c.id`
+    ? `SELECT c.id, c.name, c.color, c.weekly_target, c.daily_target, c.parent_id, IFNULL(SUM(e.duration), 0) as total_duration FROM categories c LEFT JOIN entries e ON c.id = e.category_id AND e.date BETWEEN ? AND ? GROUP BY c.id`
+    : `SELECT c.id, c.name, c.color, c.weekly_target, c.daily_target, c.parent_id, IFNULL(SUM(e.duration), 0) as total_duration FROM categories c LEFT JOIN entries e ON c.id = e.category_id AND e.date >= ? GROUP BY c.id`
   return db.prepare(query).all(endDate ? [startDate, endDate] : [startDate])
 }
 

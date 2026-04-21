@@ -4,6 +4,7 @@ export interface Category {
   color: string
   weekly_target: number
   daily_target: number
+  parent_id: number | null
 }
 
 export interface Entry {
@@ -19,9 +20,11 @@ export interface Entry {
 }
 
 export interface Summary {
+  id: number
   name: string
   color: string
   weekly_target: number
   daily_target: number
+  parent_id: number | null
   total_duration: number
 }
